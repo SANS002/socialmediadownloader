@@ -2,3 +2,4 @@ fastapi
 uvicorn
 pytubefix
 instaloader
+python-multipart
