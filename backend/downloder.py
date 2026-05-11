@@ -65,7 +65,3 @@ class InstagramDownloader:
 
         except Exception as e:
             print("Error:", e)
-
-yt = YTD()
-
-yt.download_single_video()
