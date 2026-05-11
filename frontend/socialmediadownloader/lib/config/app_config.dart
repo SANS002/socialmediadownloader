@@ -1,7 +1,8 @@
 /// Application configuration
 class AppConfig {
   // API Configuration
-  static const String apiBaseUrl = 'https://socialmediadownloader-3gvp.onrender.com';
+  static const String apiBaseUrl =
+      'https://socialmediadownloader-3gvp.onrender.com';
 
   // API Endpoints
   static const String youtubeVideoEndpoint = '/youtube/video';
@@ -24,12 +25,13 @@ class AppConfig {
   ];
 
   // Timeout Duration
-  static const Duration apiTimeout = Duration(seconds: 30);
+  static const Duration apiTimeout = Duration(minutes: 3);
 
   // App Info
   static const String appName = 'Media Downloader';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Download videos and audio from YouTube & Instagram';
+  static const String appDescription =
+      'Download videos and audio from YouTube & Instagram';
 }
 
 class QualityOption {
