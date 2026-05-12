@@ -24,8 +24,9 @@ class AppConfig {
     FormatOption(value: 'mp3', label: 'MP3 (Audio)', isAudio: true),
   ];
 
-  // Timeout Duration
+  // Timeout Durations
   static const Duration apiTimeout = Duration(minutes: 3);
+  static const Duration healthCheckTimeout = Duration(seconds: 15);
 
   // App Info
   static const String appName = 'Media Downloader';

@@ -43,10 +43,47 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
   String _format = 'mp4';
   String _quality = 'highest';
   bool _isLoading = false;
+  bool _isServerWakingUp = false; // ← ADDED
   StatusMessage? _status;
   String? _downloadUrl;
 
   final TextEditingController _urlController = TextEditingController();
+
+  @override
+  void initState() {
+    // ← ADDED
+    super.initState();
+    _wakeUpServer();
+  }
+
+  Future<void> _wakeUpServer() async {
+    // ← ADDED
+    setState(() => _isServerWakingUp = true);
+    final isUp = await ApiService.checkApiHealth();
+    setState(() => _isServerWakingUp = false);
+    if (!isUp && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Waking up server, first request may be slow...'),
+            ],
+          ),
+          duration: Duration(seconds: 4),
+          backgroundColor: Color(0xFF6366F1),
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -116,11 +153,10 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
             type: StatusType.success,
             message: response.message,
           );
-
-          // If API returns a download URL, store it
           if (response.data is String) {
             _downloadUrl = response.data;
-          } else if (response.data is Map && response.data['download_url'] != null) {
+          } else if (response.data is Map &&
+              response.data['download_url'] != null) {
             _downloadUrl = response.data['download_url'];
           }
         } else {
@@ -160,6 +196,41 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
             constraints: const BoxConstraints(maxWidth: 640),
             child: Column(
               children: [
+                // ← ADDED: server wake-up banner
+                if (_isServerWakingUp) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F3FF),
+                      border: Border.all(color: const Color(0xFFDDD6FE)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF6366F1)),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Connecting to server...',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF4F46E5),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 _buildMainCard(),
                 const SizedBox(height: 24),
                 _buildFooterText(),
@@ -309,9 +380,12 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFE0E7FF).withOpacity(0.3) : Colors.white,
+          color: isSelected
+              ? const Color(0xFFE0E7FF).withOpacity(0.3)
+              : Colors.white,
           border: Border.all(
-            color: isSelected ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
+            color:
+                isSelected ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -330,7 +404,9 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF6B7280),
+              color: isSelected
+                  ? const Color(0xFF6366F1)
+                  : const Color(0xFF6B7280),
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -339,7 +415,9 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: isSelected ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
+                color: isSelected
+                    ? const Color(0xFF1F2937)
+                    : const Color(0xFF6B7280),
               ),
             ),
           ],
@@ -380,7 +458,8 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? Colors.white : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
@@ -399,7 +478,9 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: isSelected ? const Color(0xFF1F2937) : const Color(0xFF6B7280),
+                      color: isSelected
+                          ? const Color(0xFF1F2937)
+                          : const Color(0xFF6B7280),
                     ),
                   ),
                 ),
@@ -443,7 +524,8 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
               hintStyle: TextStyle(color: Color(0xFF9CA3AF)),
               prefixIcon: Icon(Icons.link, color: Color(0xFF6B7280)),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
             style: const TextStyle(
               fontSize: 16,
@@ -479,7 +561,8 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
             child: DropdownButton<String>(
               value: _quality,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6B7280)),
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  color: Color(0xFF6B7280)),
               style: const TextStyle(
                 fontSize: 16,
                 color: Color(0xFF1F2937),
@@ -493,11 +576,14 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
                 }
               },
               items: const [
-                DropdownMenuItem(value: 'highest', child: Text('Highest Quality')),
+                DropdownMenuItem(
+                    value: 'highest', child: Text('Highest Quality')),
                 DropdownMenuItem(value: 'high', child: Text('High Quality')),
-                DropdownMenuItem(value: 'medium', child: Text('Medium Quality')),
+                DropdownMenuItem(
+                    value: 'medium', child: Text('Medium Quality')),
                 DropdownMenuItem(value: 'low', child: Text('Low Quality')),
-                DropdownMenuItem(value: 'lowest', child: Text('Lowest Quality')),
+                DropdownMenuItem(
+                    value: 'lowest', child: Text('Lowest Quality')),
               ],
             ),
           ),
@@ -507,7 +593,6 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
   }
 
   Widget _buildFormatSelection() {
-    // Instagram doesn't have format options
     if (_platform == 'instagram') {
       return const SizedBox.shrink();
     }
@@ -535,7 +620,8 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
             child: DropdownButton<String>(
               value: _format,
               isExpanded: true,
-              icon: const Icon(Icons.keyboard_arrow_down, color: Color(0xFF6B7280)),
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  color: Color(0xFF6B7280)),
               style: const TextStyle(
                 fontSize: 16,
                 color: Color(0xFF1F2937),
@@ -617,9 +703,11 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSuccess ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+            color:
+                isSuccess ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
             border: Border.all(
-              color: isSuccess ? const Color(0xFFBBF7D0) : const Color(0xFFFECACA),
+              color:
+                  isSuccess ? const Color(0xFFBBF7D0) : const Color(0xFFFECACA),
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -628,7 +716,9 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
             children: [
               Icon(
                 isSuccess ? Icons.check_circle : Icons.error,
-                color: isSuccess ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                color: isSuccess
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFFDC2626),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -637,7 +727,9 @@ class _MediaDownloaderScreenState extends State<MediaDownloaderScreen> {
                   _status!.message,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isSuccess ? const Color(0xFF166534) : const Color(0xFF991B1B),
+                    color: isSuccess
+                        ? const Color(0xFF166534)
+                        : const Color(0xFF991B1B),
                     height: 1.5,
                   ),
                 ),
